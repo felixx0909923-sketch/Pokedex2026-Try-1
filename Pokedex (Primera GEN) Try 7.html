@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokédex Team Builder</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background: #2b2b2b;
+    font-family: 'Courier New', Courier, monospace; /* Fuente más retro y tecnológica */
+}
+
+/* CARCASA DE LA POKÉDEX */
+.pokedex-shell {
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: #dd0b2d; /* Rojo clásico */
+    border-radius: 15px;
+    border: 3px solid #8b0000;
+    box-shadow: 10px 10px 25px rgba(0,0,0,0.6), inset -5px -5px 15px rgba(0,0,0,0.2);
+    padding: 20px;
+}
+
+/* LUCES SUPERIORES */
+.pokedex-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 4px solid #8b0000;
+    margin-bottom: 20px;
+}
+
+.lens-glass {
+    width: 70px;
+    height: 70px;
+    background: radial-gradient(circle at 30% 30%, #5ce6e6, #097979);
+    border-radius: 50%;
+    border: 5px solid #dedede;
+    box-shadow: 0 0 10px #097979, inset 2px 2px 5px rgba(255,255,255,0.8);
+}
+
+.mini-lights {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.light {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 2px solid #555;
+}
+.light.red { background: #ff3333; box-shadow: 0 0 5px #ff3333; }
+.light.yellow { background: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
+.light.green { background: #33cc33; box-shadow: 0 0 5px #33cc33; }
+
+/* MARCO DE LA PANTALLA */
+.screen-bezel {
+    background-color: #dedede;
+    padding: 25px;
+    border-radius: 10px 10px 10px 40px; /* Esquina inferior izquierda cortada típica */
+    border: 3px solid #555;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+/* PANTALLA PRINCIPAL */
+.screen {
+    background-color: #98cb98; /* Verde retro LCD */
+    padding: 20px;
+    border: 3px solid #444;
+    border-radius: 5px;
+    color: #111;
+    min-height: 400px;
+    box-shadow: inset 2px 2px 10px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #111;
+    text-transform: uppercase;
+    font-size: 2rem;
+    margin-top: 0;
+    border-bottom: 2px solid #555;
+    padding-bottom: 15px;
+}
+
+/* CONTROLES (Dentro de la pantalla) */
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid #111;
+    background: #e0f0e0;
+    color: #111;
+    font-family: inherit;
+    font-weight: bold;
+    min-width: 250px;
+    font-size: 1rem;
+    outline: none;
+}
+
+button {
+    padding: 10px 20px;
+    border: 2px solid #111;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #ffcc00; /* Botones amarillos al estilo interfaz Pokémon */
+    color: #111;
+    font-weight: bold;
+    font-size: 1rem;
+    font-family: inherit;
+    text-transform: uppercase;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 2px 2px 0px #111;
+}
+
+button:hover { background: #e6b800; }
+button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #111; }
+
+.loading {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: bold;
+    color: #d32f2f;
+}
+
+/* EQUIPO Y TARJETAS */
+.team {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #e0f0e0;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 2px solid #111;
+    position: relative;
+    box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+}
+
+.card img {
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    border: 2px dashed #888;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    margin: 5px 0;
+    font-size: 1.2rem;
+    color: #111;
+    text-transform: uppercase;
+}
+
+/* TIPOS */
+.type {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #111;
+    margin: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
+    text-shadow: 1px 1px 0px rgba(0,0,0,0.8);
+}
+
+.type-normal { background-color: #A8A878; }
+.type-fire { background-color: #F08030; }
+.type-water { background-color: #6890F0; }
+.type-grass { background-color: #78C850; }
+.type-electric { background-color: #F8D030; color: #111; text-shadow: none; }
+.type-ice { background-color: #98D8D8; color: #111; text-shadow: none; }
+.type-fighting { background-color: #C03028; }
+.type-poison { background-color: #A040A0; }
+.type-ground { background-color: #E0C068; }
+.type-flying { background-color: #A890F0; }
+.type-psychic { background-color: #F85888; }
+.type-bug { background-color: #A8B820; }
+.type-rock { background-color: #B8A038; }
+.type-ghost { background-color: #705898; }
+.type-dragon { background-color: #7038F8; }
+
+/* ESTADÍSTICAS */
+.stats-container {
+    margin-top: 15px;
+    text-align: left;
+    background: rgba(255,255,255,0.4);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+}
+
+.stat-name { width: 70px; font-weight: bold; }
+.stat-value { width: 30px; text-align: right; }
+
+.stat-bar-bg {
+    flex-grow: 1;
+    background: #bbb;
+    height: 6px;
+    margin-left: 5px;
+    border: 1px solid #555;
+}
+
+.stat-bar { background: #333; height: 100%; }
+
+.btn-remove {
+    background: #ff5252;
+    margin-top: 15px;
+    width: 100%;
+    padding: 6px;
+    font-size: 0.8rem;
+    color: white;
+}
+.btn-remove:hover { background: #d32f2f; }
+
+/* ANÁLISIS */
+.analysis {
+    background: rgba(255,255,255,0.3);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px dashed #444;
+}
+
+.analysis h2 { margin-top: 0; color: #111; font-size: 1.5rem; text-transform: uppercase; }
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.analysis-section {
+    background: #e0f0e0;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #444;
+}
+
+.analysis-section h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    border-bottom: 2px solid #444;
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.badge-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+/* BOTONES DECORATIVOS INFERIORES */
+.pokedex-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding: 0 30px;
+}
+
+.d-pad {
+    width: 80px;
+    height: 80px;
+    background: #222;
+    clip-path: polygon(33% 0, 66% 0, 66% 33%, 100% 33%, 100% 66%, 66% 66%, 66% 100%, 33% 100%, 33% 66%, 0 66%, 0 33%, 33% 33%);
+    box-shadow: inset -3px -3px 5px rgba(0,0,0,0.5);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    background: #111;
+    border-radius: 50%;
+    box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5), 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+</style>
+</head>
+<body>
+
+<div class="pokedex-shell">
+    
+    <!-- Parte superior de la Pokédex (Lentes y luces) -->
+    <div class="pokedex-top">
+        <div class="lens-glass"></div>
+        <div class="mini-lights">
+            <div class="light red"></div>
+            <div class="light yellow"></div>
+            <div class="light green"></div>
+        </div>
+    </div>
+
+    <!-- Marco y Pantalla -->
+    <div class="screen-bezel">
+        <div class="screen">
+            <h1>Pokédex Team Builder</h1>
+
+            <div class="controls">
+                <select id="pokemonSelect">
+                    <option value="">Cargando datos de Kanto...</option>
+                </select>
+                <button onclick="addPokemon()">Añadir a Equipo</button>
+            </div>
+
+            <div id="loading" class="loading"></div>
+
+            <div id="team" class="team"></div>
+
+            <div id="analysis" class="analysis">
+                <h2>Datos del Equipo</h2>
+                <p>Inserte Pokémon en el sistema para escanear sus estadísticas y debilidades de tipo.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones decorativos inferiores de la Pokédex -->
+    <div class="pokedex-bottom">
+        <div class="action-buttons">
+            <div class="action-btn"></div>
+            <div class="action-btn"></div>
+        </div>
+        <div class="d-pad"></div>
+    </div>
+
+</div>
+
+<script>
+// --- Lógica original mantenida intacta ---
+const team = [];
+
+const typeTranslations = {
+    normal: "Normal", fire: "Fuego", water: "Agua", grass: "Planta",
+    electric: "Eléctrico", ice: "Hielo", fighting: "Lucha", poison: "Veneno",
+    ground: "Tierra", flying: "Volador", psychic: "Psíquico", bug: "Bicho",
+    rock: "Roca", ghost: "Fantasma", dragon: "Dragón"
+};
+
+const pokemonNamesEs = {
+    bulbasaur: "Bulbasaur", ivysaur: "Ivysaur", venusaurs: "Venusaur", charmander: "Charmander", charmeleon: "Charmeleon", charizard: "Charizard",
+    squirtle: "Squirtle", wartortle: "Wartortle", blastoise: "Blastoise", caterpie: "Caterpie", metapod: "Metapod", butterfree: "Butterfree",
+    weedle: "Weedle", kakuna: "Kakuna", beedrill: "Beedrill", pidgey: "Pidgey", pidgeotto: "Pidgeotto", pidgeot: "Pidgeot", rattata: "Rattata",
+    raticate: "Raticate", spearow: "Spearow", fearow: "Fearow", ekans: "Ekans", arbok: "Arbok", pikachu: "Pikachu", raichu: "Raichu",
+    sandshrew: "Sandshrew", sandslash: "Sandslash", nidoran_f: "Nidoran ♀", nidorina: "Nidorina", nidoqueen: "Nidoqueen", nidoran_m: "Nidoran ♂",
+    nidorino: "Nidorino", nidoking: "Nidoking", clefairy: "Clefairy", clefable: "Clefable", vulpix: "Vulpix", ninetales: "Ninetales",
+    jigglypuff: "Jigglypuff", wigglytuff: "Wigglytuff", zubat: "Zubat", golbat: "Golbat", oddish: "Oddish", gloom: "Gloom", vileplume: "Vileplume",
+    paras: "Paras", parasect: "Parasect", venonat: "Venonat", venomoth: "Venomoth", diglett: "Diglett", dugtrio: "Dugtrio", meowth: "Meowth",
+    persian: "Persian", psyduck: "Psyduck", golduck: "Golduck", mankey: "Mankey", primeape: "Primeape", growlithe: "Growlithe", arcanine: "Arcanine",
+    poliwag: "Poliwag", poliwhirl: "Poliwhirl", poliwrath: "Poliwrath", abra: "Abra", kadabra: "Kadabra", alakazam: "Alakazam", machop: "Machop",
+    machoke: "Machoke", machamp: "Machamp", bellsprout: "Bellsprout", weepinbell: "Weepinbell", victreebel: "Victreebel", tentacool: "Tentacool",
+    tentacruel: "Tentacruel", geodude: "Geodude", graveler: "Graveler", golem: "Golem", ponyta: "Ponyta", rapidash: "Rapidash", slowpoke: "Slowpoke",
+    slowbro: "Slowbro", magnemite: "Magnemite", magneton: "Magneton", farfetchd: "Farfetch'd", doduo: "Doduo", dodrio: "Dodrio", seel: "Seel",
+    dewgong: "Dewgong", grimer: "Grimer", muk: "Muk", shellder: "Shellder", cloyster: "Cloyster", gastly: "Gastly", haunter: "Haunter",
+    gengar: "Gengar", onix: "Onix", drowzee: "Drowzee", hypno: "Hypno", krabby: "Krabby", kingler: "Kingler", voltorb: "Voltorb",
+    electrode: "Electrode", exeggcute: "Exeggcute", exeggutor: "Exeggutor", cubone: "Cubone", marowak: "Marowak", hitmonlee: "Hitmonlee",
+    hitmonchan: "Hitmonchan", lickitung: "Lickitung", koffing: "Koffing", weezing: "Weezing", rhyhorn: "Rhyhorn", rhydon: "Rhydon",
+    chansey: "Chansey", tangela: "Tangela", kangaskhan: "Kangaskhan", horsea: "Horsea", seadra: "Seadra", goldeen: "Goldeen", seaking: "Seaking",
+    staryu: "Staryu", starmie: "Starmie", mr_mime: "Mr. Mime", scyther: "Scyther", jynx: "Jynx", electabuzz: "Electabuzz", magmar: "Magmar",
+    pinsir: "Pinsir", tauros: "Tauros", magikarp: "Magikarp", gyarados: "Gyarados", lapras: "Lapras", ditto: "Ditto", eevee: "Eevee",
+    vaporeon: "Vaporeon", jolteon: "Jolteon", flareon: "Flareon", porygon: "Porygon", omanyte: "Omanyte", omastar: "Omastar", kabuto: "Kabuto",
+    kabutops: "Kabutops", aerodactyl: "Aerodactyl", Snorlax: "Snorlax", articuno: "Articuno", zapdos: "Zapdos", moltres: "Moltres",
+    dratini: "Dratini", dragonair: "Dragonair", dragonite: "Dragonite", mewtwo: "Mewtwo", mew: "Mew"
+};
+
+const typeChart = {
+    normal: { rock: 0.5, ghost: 0 },
+    fire: { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5 },
+    water: { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+    electric: { water: 2, electric: 0.5, grass: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+    grass: { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5 },
+    ice: { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2 },
+    fighting: { normal: 2, ice: 2, poison: 0.5, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0 },
+    poison: { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, bug: 2, ghost: 0.5 },
+    ground: { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2 },
+    flying: { electric: 0.5, grass: 2, fighting: 2, bug: 2, rock: 0.5 },
+    psychic: { fighting: 2, poison: 2, psychic: 0.5, ghost: 2 }, 
+    bug: { fire: 0.5, grass: 2, fighting: 0.5, poison: 2, flying: 0.5, psychic: 2, ghost: 0.5 },
+    rock: { fire: 2, ice: 2, fighting: 0.5, poison: 0.5, ground: 0.5, flying: 2, bug: 2 },
+    ghost: { normal: 0, psychic: 0, ghost: 2 }, 
+    dragon: { fire: 0.5, water: 0.5, electric: 0.5, grass: 0.5, dragon: 2 }
+};
+
+async function loadPokemonList(){
+    const select = document.getElementById("pokemonSelect");
+    try {
+        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
+        const data = await res.json();
+        
+        select.innerHTML = ""; 
+        
+        data.results.forEach((pk, index) => {
+            const id = index + 1;
+            const option = document.createElement("option");
+            option.value = id;
+            
+            const key = pk.name.replace("-m", "_m").replace("-f", "_f");
+            const nameEs = pokemonNamesEs[key] || (pk.name.charAt(0).toUpperCase() + pk.name.slice(1));
+            
+            option.textContent = `#${String(id).padStart(3, '0')} - ${nameEs}`;
+            select.appendChild(option);
+        });
+        
+        document.getElementById("loading").innerHTML = "[SISTEMA LISTO]";
+        setTimeout(() => document.getElementById("loading").innerHTML = "", 2000);
+    } catch (error) {
+        document.getElementById("loading").innerHTML = "Error de conexión con la red.";
+    }
+}
+
+async function addPokemon(){
+    const select = document.getElementById("pokemonSelect");
+    const id = select.value;
+    if(!id) return;
+
+    if(team.length >= 6){
+        alert("Equipo completo. Límite de 6 Pokémon alcanzado.");
+        return;
+    }
+
+    if(team.find(p => p.id == id)){
+        alert("El Pokémon seleccionado ya se encuentra en el equipo.");
+        return;
+    }
+
+    document.getElementById("loading").innerHTML = "Descargando datos del PC de Bill...";
+
+    try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const pokemon = await res.json();
+        team.push(pokemon);
+        
+        renderTeam();
+        analyzeTeam();
+        document.getElementById("loading").innerHTML = "";
+    } catch(e) {
+        alert("Error al conectar con la Pokédex.");
+    }
+}
+
+function removePokemon(id){
+    const index = team.findIndex(p => p.id === id);
+    if(index !== -1) team.splice(index, 1);
+    renderTeam();
+    analyzeTeam();
+}
+
+function renderTeam(){
+    const teamDiv = document.getElementById("team");
+    teamDiv.innerHTML = "";
+
+    team.forEach(pokemon => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const typesHtml = pokemon.types.map(t => {
+            const typeEn = t.type.name;
+            const typeEs = typeTranslations[typeEn] || typeEn;
+            return `<span class="type type-${typeEn}">${typeEs}</span>`;
+        }).join("");
+
+        const hp = pokemon.stats[0].base_stat;
+        const atk = pokemon.stats[1].base_stat;
+        const def = pokemon.stats[2].base_stat;
+        const spAtk = pokemon.stats[3].base_stat; 
+        const speed = pokemon.stats[5].base_stat;
+
+        const key = pokemon.name.replace("-m", "_m").replace("-f", "_f");
+        const nameEs = pokemonNamesEs[key] || (pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1));
+
+        card.innerHTML = `
+            <img src="${pokemon.sprites.front_default}" alt="${nameEs}">
+            <h2>${nameEs}</h2>
+            <div>${typesHtml}</div>
+            
+            <div class="stats-container">
+                ${createStatRow("PS", hp, 250)}
+                ${createStatRow("ATQ", atk, 150)}
+                ${createStatRow("DEF", def, 180)}
+                ${createStatRow("ESP", spAtk, 160)}
+                ${createStatRow("VEL", speed, 150)}
+            </div>
+
+            <button class="btn-remove" onclick="removePokemon(${pokemon.id})">Liberar</button>
+        `;
+        teamDiv.appendChild(card);
+    });
+}
+
+function createStatRow(label, val, max) {
+    const pct = Math.min((val / max) * 100, 100);
+    return `
+        <div class="stat-row">
+            <span class="stat-name">${label}</span>
+            <span class="stat-value">${val}</span>
+            <div class="stat-bar-bg">
+                <div class="stat-bar" style="width: ${pct}%"></div>
+            </div>
+        </div>
+    `;
+}
+
+function analyzeTeam(){
+    const analysisDiv = document.getElementById("analysis");
+
+    if(team.length === 0){
+        analysisDiv.innerHTML = `
+            <h2>Datos del Equipo</h2>
+            <p>Inserte Pokémon en el sistema para escanear sus estadísticas y debilidades de tipo.</p>
+        `;
+        return;
+    }
+
+    let totalHp = 0, totalAtk = 0, totalDef = 0, totalSpe = 0, totalSp = 0;
+    let typeWeaknesses = {};
+
+    Object.keys(typeTranslations).forEach(t => typeWeaknesses[t] = 0);
+
+    team.forEach(p => {
+        totalHp += p.stats[0].base_stat;
+        totalAtk += p.stats[1].base_stat;
+        totalDef += p.stats[2].base_stat;
+        totalSp += p.stats[3].base_stat;
+        totalSpe += p.stats[5].base_stat;
+
+        Object.keys(typeTranslations).forEach(atacante => {
+            let multTotal = 1;
+            
+            p.types.forEach(defensorObj => {
+                const defensor = defensorObj.type.name;
+                if(typeChart[atacante] && typeChart[atacante][defensor] !== undefined){
+                    multTotal *= typeChart[atacante][defensor];
+                }
+            });
+
+            if(multTotal > 1) typeWeaknesses[atacante] += 1; 
+            if(multTotal < 1) typeWeaknesses[atacante] -= 1; 
+        });
+    });
+
+    const count = team.length;
+    
+    let debilidades = [];
+    let resistencias = [];
+
+    for(let t in typeWeaknesses) {
+        if(typeWeaknesses[t] > 0) debilidades.push(`<span class="type type-${t}">${typeTranslations[t]}</span>`);
+        if(typeWeaknesses[t] < 0) resistencias.push(`<span class="type type-${t}">${typeTranslations[t]}</span>`);
+    }
+
+    analysisDiv.innerHTML = `
+        <h2>Escáner General (${count}/6)</h2>
+        <div class="analysis-grid">
+            <div class="analysis-section">
+                <h3>Promedio de Stats</h3>
+                PS: <b>${Math.round(totalHp/count)}</b> | 
+                ATQ: <b>${Math.round(totalAtk/count)}</b><br>
+                DEF: <b>${Math.round(totalDef/count)}</b> | 
+                ESP: <b>${Math.round(totalSp/count)}</b><br>
+                VEL: <b>${Math.round(totalSpe/count)}</b>
+            </div>
+            <div class="analysis-section">
+                <h3>Advertencia: Debilidades</h3>
+                <p>Precaución con los ataques de tipo:</p>
+                <div class="badge-list">${debilidades.length ? debilidades.join("") : "Ninguna."}</div>
+            </div>
+            <div class="analysis-section">
+                <h3>Análisis: Resistencias</h3>
+                <p>El equipo resiste ataques de tipo:</p>
+                <div class="badge-list">${resistencias.length ? resistencias.join("") : "Ninguna."}</div>
+            </div>
+        </div>
+    `;
+}
+
+loadPokemonList();
+</script>
+
+</body>
+</html>
