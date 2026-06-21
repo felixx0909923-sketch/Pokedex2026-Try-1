@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokédex Offline Pro - Team Builder</title>
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; padding: 20px; background: #2b2b2b; font-family: 'Courier New', Courier, monospace; }
+
+/* CARCASA DE LA POKÉDEX */
+.pokedex-shell {
+    max-width: 1050px;
+    margin: 0 auto;
+    background-color: #dd0b2d;
+    border-radius: 15px;
+    border: 4px solid #8b0000;
+    box-shadow: 10px 10px 25px rgba(0,0,0,0.6), inset -5px -5px 15px rgba(0,0,0,0.3);
+    padding: 20px;
+}
+
+/* PANEL SUPERIOR DE LUCES */
+.pokedex-top { display: flex; align-items: flex-start; gap: 20px; padding-bottom: 20px; border-bottom: 4px solid #8b0000; margin-bottom: 20px; }
+.lens-glass {
+    width: 75px; height: 75px;
+    background: radial-gradient(circle at 30% 30%, #5ce6e6, #097979);
+    border-radius: 50%; border: 5px solid #dedede;
+    box-shadow: 0 0 12px #097979, inset 2px 2px 5px rgba(255,255,255,0.8);
+}
+.mini-lights { display: flex; gap: 10px; margin-top: 5px; }
+.light { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #444; }
+.light.red { background: #ff3333; box-shadow: 0 0 5px #ff3333; }
+.light.yellow { background: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
+.light.green { background: #33cc33; box-shadow: 0 0 5px #33cc33; }
+
+/* MARCO DE LA PANTALLA RECTANGULAR */
+.screen-bezel { 
+    background-color: #dedede; 
+    padding: 22px; 
+    border-radius: 10px 10px 10px 40px; 
+    border: 3px solid #555; 
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.4); 
+}
+.screen { 
+    background-color: #98cb98; 
+    padding: 20px; 
+    border: 3px solid #444; 
+    border-radius: 5px; 
+    color: #111; 
+    min-height: 450px; 
+    box-shadow: inset 2px 2px 10px rgba(0,0,0,0.3); 
+}
+
+h1 { text-align: center; color: #111; text-transform: uppercase; font-size: 1.7rem; margin-top: 0; border-bottom: 2px solid #555; padding-bottom: 12px; }
+
+/* PANEL DE CONTROLES E INTERRUPTORES */
+.controls { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 5px; border: 1px dashed #555;}
+select { padding: 10px; border-radius: 5px; border: 2px solid #111; background: #e0f0e0; color: #111; font-family: inherit; font-weight: bold; min-width: 230px; font-size: 0.95rem; outline: none; }
+
+button { padding: 10px 18px; border: 2px solid #111; border-radius: 5px; cursor: pointer; color: #111; font-weight: bold; font-size: 0.9rem; font-family: inherit; text-transform: uppercase; box-shadow: 2px 2px 0px #111; transition: 0.1s; }
+button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #111; }
+
+.btn-add { background: #ffcc00; }
+.btn-add:hover { background: #e6b800; }
+.btn-shiny { background: #33a1ff; color: white; }
+.btn-shiny.active { background: #ff66cc; color: black; animation: flash 1s infinite alternate; }
+
+/* SECCIÓN DEL EQUIPO */
+.team { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px; }
+.card { background: #e0f0e0; border-radius: 10px; padding: 15px; text-align: center; border: 2px solid #111; box-shadow: 3px 3px 0px rgba(0,0,0,0.2); position: relative;}
+.pixel-sprite { font-size: 55px; margin: 5px 0; display: block; filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.15)); }
+
+.card h2 { margin: 5px 0; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1px; }
+
+/* BIOMETRÍA Y TEXTO POKÉDEX */
+.biometrics { font-size: 0.75rem; background: rgba(255,255,255,0.4); border: 1px solid #777; border-radius: 4px; padding: 4px; margin: 5px 0; display: flex; justify-content: space-around; font-weight: bold;}
+.description-box { font-size: 0.72rem; background: #fffdf0; border: 1px solid #999; border-radius: 5px; padding: 8px; margin: 8px 0; text-align: left; line-height: 1.2; color: #222; max-height: 65px; overflow-y: auto;}
+
+.type { display: inline-block; padding: 3px 7px; border-radius: 4px; border: 1px solid #111; margin: 2px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: white; }
+.type-normal { background: #A8A878; } .type-fire { background: #F08030; } .type-water { background: #6890F0; } .type-grass { background: #78C850; } .type-electric { background: #F8D030; color: #111; } .type-poison { background: #A040A0; } .type-psychic { background: #F85888; } .type-flying { background: #A890F0; }
+
+/* CONTENEDORES DE ESTADÍSTICAS Y ATAQUES */
+.stats-container { margin-top: 8px; text-align: left; background: rgba(255,255,255,0.25); padding: 6px; border-radius: 5px; border: 1px solid #999; }
+.stat-row { display: flex; justify-content: space-between; font-size: 0.72rem; margin-bottom: 2px; }
+.stat-name { font-weight: bold; }
+
+.moves-container { text-align: left; margin-top: 8px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 5px; font-size: 0.72rem; border: 1px dashed #666; }
+.moves-title { font-weight: bold; border-bottom: 1px solid #666; margin-bottom: 3px; text-transform: uppercase; }
+
+.btn-remove { background: #ff5252; margin-top: 10px; width: 100%; padding: 6px; font-size: 0.75rem; color: white; border-radius: 4px;}
+.btn-remove:hover { background: #d32f2f; }
+
+/* SISTEMA DE ANÁLISIS */
+.analysis { background: rgba(255,255,255,0.2); padding: 18px; border-radius: 10px; border: 2px dashed #444; }
+.analysis h2 { margin-top: 0; font-size: 1.3rem; text-transform: uppercase; }
+.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+.analysis-section { background: #e0f0e0; padding: 12px; border-radius: 5px; border: 1px solid #444; font-size: 0.82rem; }
+.analysis-section h3 { margin-top: 0; border-bottom: 2px solid #444; padding-bottom: 3px; font-size: 0.9rem; text-transform: uppercase; }
+.badge-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top:
