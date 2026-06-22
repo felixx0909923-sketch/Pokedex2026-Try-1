@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Adivina el Segundo - Edición Celular</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent; /* Quita el flash azul al tocar en móviles */
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #050b05;
+            color: #a3e6a3;
+            text-align: center;
+            padding: 15px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.4s ease;
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: rgba(13, 31, 13, 0.9);
+            padding: 25px 20px;
+            border-radius: 20px;
+            border: 1px solid #1f4d1f;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s ease;
+        }
+        
+        /* Ajuste de colores dinámicos cuando cambia el fondo por el turno del jugador */
+        body.turno-activo {
+            color: #ffffff;
+        }
+        body.turno-activo .container {
+            background: rgba(0, 0, 0, 0.75);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+        body.turno-activo h1, body.turno-activo #cronometro {
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5) !important;
+        }
+        body.turno-activo .subtitle, body.turno-activo #instruccion-objetivo {
+            color: #e0e0e0 !important;
+        }
+
+        h1 {
+            color: #39ff14;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            color: #70b370;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        
+        #cronometro {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 5rem;
+            font-weight: bold;
+            color: #39ff14;
+            margin: 30px 0;
+            text-shadow: 0 0 15px rgba(57, 255, 20, 0.6);
+        }
+        
+        .btn {
+            background-color: #1f4d1f;
+            color: #39ff14;
+            border: 1px solid #39ff14;
+            padding: 14px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: #70b370;
+            border: 1px solid #1f4d1f;
+            margin-top: 12px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .select-custom {
+            background-color: #050b05;
+            color: #39ff14;
+            border: 1px solid #1f4d1f;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            width: 100%;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        /* Zona interactiva táctil gigante */
+        .tap-zone {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 40px 15px;
+            margin: 20px 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        #resultados {
+            text-align: left;
+            background: #091409;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #1f4d1f;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        #resultados h3 { margin-top: 0; color: #39ff14; text-align: center; }
+        #resultados ul { list-style: none; padding: 0; margin: 10px 0; }
+        #resultados li {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+        .ganador {
+            color: #39ff14;
+            font-weight: bold;
+            font-size: 1.25rem;
+            text-align: center;
+            margin: 15px 0;
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    <h1 id="titulo-principal">⏱️ Adivina el Segundo</h1>
+    <p class="subtitle" id="sub-principal">Modo celular por turnos de pantalla completa.</p>
+
+    <!-- MENU INICIAL -->
+    <div id="pantalla-inicio">
+        <label style="font-size: 1.1rem; display:block; margin-bottom: 10px;">¿Cuántos van a jugar?</label>
+        <select id="cant-jugadores" class="select-custom">
+            <option value="2">2 Jugadores</option>
+            <option value="3">3 Jugadores</option>
+            <option value="4">4 Jugadores</option>
+            <option value="5">5 Jugadores</option>
+        </select>
+        <button class="btn" onclick="configurarPartida()">CREAR PARTIDA</button>
+    </div>
+
+    <!-- PANTALLA DE JUEGO (TURNOS) -->
+    <div id="pantalla-juego" class="hidden">
+        <h3 id="instruccion-objetivo">Objetivo: --.--s</h3>
+        <div id="cronometro">00.00</div>
+        
+        <!-- Área gigante para tocar en el celular -->
+        <div id="zona-tactil" class="tap-zone" onclick="manejarToquePantalla()">
+            ¡Toca para Empezar!
+        </div>
+
+        <button class="btn btn-secondary" id="btn-abortar" onclick="regresarAlMenu()">« Salir al Menú</button>
+    </div>
+
+    <!-- PANTALLA DE RESULTADOS FINALES -->
+    <div id="pantalla-resultados" class="hidden">
+        <div id="resultados"></div>
+        <br>
+        <button class="btn" onclick="reiniciarRonda()">JUGAR OTRA VEZ</button>
+        <button class="btn btn-secondary" onclick="regresarAlMenu()">Cambiar Jugadores</button>
+    </div>
+</div>
+
+<script>
+    // Paleta de colores vibrantes para distinguir fácilmente los turnos de cada jugador
+    const COLORES_JUGADORES = [
+        '#2a52be', // Jugador 1: Azul Eléctrico
+        '#9932cc', // Jugador 2: Orquídea Oscuro
+        '#d2691e', // Jugador 3: Naranja Chocolate
+        '#c71585', // Jugador 4: Magenta Medio
+        '#008080'  // Jugador 5: Teal / Turquesa oscuro
+    ];
+
+    let numJugadores = 2;
+    let tiempoObjetivo = 0;
+    let tiempoActual = 0;
+    let intervalo = null;
+    let tiempoOcultar = 0;
+    
+    let jugadorActualIndex = 0;
+    let datosJugadores = [];
+    
+    // Estados del turno: 'ESPERANDO_INICIO', 'CORRIENDO', 'TURN0_TERMINADO'
+    let estadoTurno = 'ESPERANDO_INICIO'; 
+
+    function configurarPartida() {
+        numJugadores = parseInt(document.getElementById('cant-jugadores').value);
+        document.getElementById('pantalla-inicio').classList.add('hidden');
+        document.getElementById('pantalla-juego').classList.remove('hidden');
+        
+        // Generar el tiempo objetivo común para toda la ronda (entre 5 y 10 segundos)
+        tiempoObjetivo = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+        
+        // Inicializar estructura de jugadores
+        datosJugadores = [];
+        for(let i = 0; i < numJugadores; i++) {
+            datosJugadores.push({
+                nombre: `Jugador ${i + 1}`,
+                color: COLORES_JUGADORES[i],
+                tiempoRegistrado: null
+            });
+        }
+        
+        jugadorActualIndex = 0;
+        prepararTurnoJugador();
+    }
+
+    function prepararTurnoJugador() {
+        estadoTurno = 'ESPERANDO_INICIO';
+        tiempoActual = 0;
+        
+        let jugador = datosJugadores[jugadorActualIndex];
+        
+        // Cambiar el fondo de la pantalla al color específico del jugador
+        document.body.style.backgroundColor = jugador.color;
+        document.body.classList.add('turno-activo');
+        
+        document.getElementById('instruccion-objetivo').innerText = `Objetivo: Llegar a los ${tiempoObjetivo}.00s`;
+        document.getElementById('cronometro').innerText = "00.00";
+        
+        const zonaTactil = document.getElementById('zona-tactil');
+        zonaTactil.innerText = `Turno de: ${jugador.nombre}\n\n👉 ¡TOCA PARA INICIAR!`;
+        zonaTactil.style.borderColor = "#ffffff";
+        
+        // Generar un tiempo de ocultamiento diferente para cada turno para que no sea predecible
+        tiempoOcultar = 1.2 + (Math.random() * 1.8);
+        document.getElementById('btn-abortar').classList.remove('hidden');
+    }
+
+    function manejarToquePantalla() {
+        const zonaTactil = document.getElementById('zona-tactil');
+
+        if (estadoTurno === 'ESPERANDO_INICIO') {
+            // El jugador da el primer toque: Inicia el cronómetro
+            estadoTurno = 'CORRIENDO';
+            document.getElementById('btn-abortar').classList.add('hidden'); // Ocultar para evitar clics accidentales
+            zonaTactil.innerText = "⏱️ ¡TOCA AHORA PARA DETENER!";
+            
+            const tiempoInicio = performance.now();
+            
+            intervalo = setInterval(() => {
+                tiempoActual = (performance.now() - tiempoInicio) / 1000;
+                
+                // Si pasa el tiempo ciego, se oculta el valor del segundero
+                if (tiempoActual >= tiempoOcultar) {
+                    document.getElementById('cronometro').innerText = "??.??";
+                } else {
+                    document.getElementById('cronometro').innerText = tiempoActual.toFixed(2);
+                }
+                
+                // Límite de seguridad automática si no toca la pantalla
+                if (tiempoActual > tiempoObjetivo + 4) {
+                    fijarTiempoJugador(null);
+                }
+            }, 10);
+            
+        } else if (estadoTurno === 'CORRIENDO') {
+            // El jugador da el segundo toque: Detiene su tiempo
+            fijarTiempoJugador(tiempoActual);
+        }
+    }
+
+    function fijarTiempoJugador(tiempo) {
+        clearInterval(intervalo);
+        estadoTurno = 'TURN0_TERMINADO';
+        
+        let jugador = datosJugadores[jugadorActualIndex];
+        jugador.tiempoRegistrado = tiempo;
+        
+        // Mostrar en grande qué tiempo hizo
+        document.getElementById('cronometro').innerText = tiempo ? tiempo.toFixed(2) : "❌ LENTO";
+        
+        // Avanzar al siguiente jugador o ir a resultados si era el último
+        jugadorActualIndex++;
+        
+        const zonaTactil = document.getElementById('zona-tactil');
+        if (jugadorActualIndex < numJugadores) {
+            zonaTactil.innerText = "¡Tiempo fijado!\n\n👉 PASA EL CELULAR Y TOCA AQUÍ";
+            // Cambiamos temporalmente el estado para requerir un toque de confirmación del siguiente jugador
+            estadoTurno = 'ESPERANDO_CONFIRMACION'; 
+        } else {
+            zonaTactil.innerText = "🏁 ¡TODOS TERMINARON!\n\n👉 VER RESULTADOS";
+            estadoTurno = 'VER_RESULTADOS';
+        }
+    }
+
+    // Sobrecarga de la función táctil para manejar las transiciones entre jugadores
+    document.getElementById('zona-tactil').addEventListener('click', function(e) {
+        if (estadoTurno === 'ESPERANDO_CONFIRMACION') {
+            e.stopPropagation();
+            prepararTurnoJugador();
+        } else if (estadoTurno === 'VER_RESULTADOS') {
+            e.stopPropagation();
+            mostrarResultadosFinales();
+        }
+    });
+
+    function mostrarResultadosFinales() {
+        // Restaurar estilos normales de la interfaz verde cyberpunk
+        document.body.style.backgroundColor = "#050b05";
+        document.body.classList.remove('turno-activo');
+        
+        document.getElementById('pantalla-juego').classList.add('hidden');
+        document.getElementById('pantalla-resultados').classList.remove('hidden');
+        
+        let mejorDiferencia = Infinity;
+        let ganador = null;
+        let htmlResultados = `<h3>📊 Tabla de Posiciones</h3><p style="text-align:center; color:#70b370;">Objetivo: ${tiempoObjetivo}.00 segundos</p><ul>`;
+        
+        // Calcular diferencias y construir la tabla
+        datosJugadores.forEach(p => {
+            let textoTiempo = "No presionó";
+            let textoDiff = "";
+            
+            if (p.tiempoRegistrado !== null) {
+                textoTiempo = `${p.tiempoRegistrado.toFixed(2)}s`;
+                let diff = Math.abs(p.tiempoRegistrado - tiempoObjetivo);
+                textoDiff = `(Dif: ${diff.toFixed(2)}s)`;
+                
+                if (diff < mejorDiferencia) {
+                    mejorDiferencia = diff;
+                    ganador = p;
+                }
+            }
+            
+            htmlResultados += `
+                <li style="background-color: ${p.color};">
+                    <strong>${p.nombre}</strong>
+                    <span>${textoTiempo} ${textoDiff}</span>
+                </li>`;
+        });
+        
+        htmlResultados += "</ul>";
+        
+        if (ganador) {
+            htmlResultados += `<p class="ganador">🏆 ¡Ganó el ${ganador.nombre}! <br>Estuvo más cerca.</p>`;
+        } else {
+            htmlResultados += `<p class="ganador">❌ Nadie logró presionar a tiempo.</p>`;
+        }
+        
+        document.getElementById('resultados').innerHTML = htmlResultados;
+    }
+
+    function reiniciarRonda() {
+        document.getElementById('pantalla-resultados').classList.add('hidden');
+        document.getElementById('pantalla-juego').classList.remove('hidden');
+        
+        // Generar un nuevo objetivo aleatorio para la siguiente partida completa
+        tiempoObjetivo = Math.floor(Math.random() * (10 - 5 + 1)) + 5;
+        
+        // Resetear marcas de tiempo
+        datosJugadores.forEach(p => p.tiempoRegistrado = null);
+        jugadorActualIndex = 0;
+        
+        prepararTurnoJugador();
+    }
+
+    function regresarAlMenu() {
+        clearInterval(intervalo);
+        document.body.style.backgroundColor = "#050b05";
+        document.body.classList.remove('turno-activo');
+        
+        document.getElementById('pantalla-juego').classList.add('hidden');
+        document.getElementById('pantalla-resultados').classList.add('hidden');
+        document.getElementById('pantalla-inicio').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
