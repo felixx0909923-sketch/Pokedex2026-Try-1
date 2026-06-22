@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Adivina el Segundo! - Edición Matrix</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #050b05;
+            color: #a3e6a3;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 650px;
+            margin: 30px auto;
+            background: #0d1f0d;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #1f4d1f;
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.15);
+        }
+        h1 {
+            color: #39ff14;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+            font-size: 2.2rem;
+        }
+        .subtitle {
+            color: #70b370;
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+        .setup, .game-zone {
+            margin: 20px 0;
+        }
+        .hidden {
+            display: none !important;
+        }
+        
+        #cronometro {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 5.5rem;
+            font-weight: bold;
+            color: #39ff14;
+            margin: 25px 0;
+            text-shadow: 0 0 20px rgba(57, 255, 20, 0.8);
+        }
+        
+        .btn {
+            background-color: #1f4d1f;
+            color: #39ff14;
+            border: 1px solid #39ff14;
+            padding: 12px 28px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 5px rgba(57, 255, 20, 0.2);
+        }
+        .btn:hover {
+            background-color: #39ff14;
+            color: #050b05;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.6);
+            transform: scale(1.03);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: #70b370;
+            border: 1px solid #1f4d1f;
+            margin-top: 15px;
+            padding: 8px 20px;
+            font-size: 0.95rem;
+        }
+        .btn-secondary:hover {
+            background-color: #1f4d1f;
+            color: #a3e6a3;
+            border-color: #70b370;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .select-custom {
+            background-color: #050b05;
+            color: #39ff14;
+            border: 1px solid #1f4d1f;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+        .select-custom:focus {
+            border-color: #39ff14;
+        }
+        
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .player-card {
+            background: #091409;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #1f4d1f;
+            transition: all 0.3s ease;
+        }
+        .player-card.ready {
+            border-color: #39ff14;
+            background: #122912;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+        }
+        .player-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            color: #a3e6a3;
+        }
+        .player-key {
+            display: inline-block;
+            background: #1f4d1f;
+            color: #39ff14;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            border: 1px solid #2e732e;
+        }
+        
+        #resultados {
+            margin-top: 30px;
+            text-align: left;
+            background: #091409;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #1f4d1f;
+        }
+        #resultados h3 {
+            margin-top: 0;
+            color: #39ff14;
+            border-bottom: 1px solid #1f4d1f;
+            padding-bottom: 8px;
+        }
+        #resultados ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 15px 0;
+        }
+        #resultados li {
+            padding: 6px 0;
+            border-bottom: 1px dashed #122912;
+        }
+        .ganador {
+            color: #39ff14;
+            font-weight: bold;
+            font-size: 1.3rem;
+            text-align: center;
+            margin-top: 15px;
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.4);
+        }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⏱️ Adivina el Segundo</h1>
+    <p class="subtitle">El cronómetro se ocultará en cualquier momento. ¡Presiona tu tecla asignada!</p>
+
+    <!-- PANTALLA DE CONFIGURACIÓN -->
+    <div id="pantalla-inicio" class="setup">
+        <label for="cant-jugadores" style="font-size: 1.2rem; margin-right: 10px;">¿Cuántos juegan?</label>
+        <select id="cant-jugadores" class="select-custom">
+            <option value="2">2 Jugadores</option>
+            <option value="3">3 Jugadores</option>
+            <option value="4">4 Jugadores</option>
+            <option value="5">5 Jugadores</option>
+        </select>
+        <br><br><br>
+        <button class="btn" onclick="iniciarConfiguracion()">CONFIGURAR PARTIDA</button>
+    </div>
+
+    <!-- PANTALLA DE JUEGO -->
+    <div id="pantalla-juego" class="game-zone hidden">
+        <h3 id="instruccion-objetivo" style="color: #a3e6a3;">Tiempo Objetivo: Calculando...</h3>
+        <div id="cronometro">00.00</div>
+        
+        <div id="zona-controles-inicio">
+            <button class="btn" id="btn-comenzar" onclick="comenzarCarrera()">¡ARRANCAR!</button>
+            <br>
+            <button class="btn btn-secondary" id="btn-volver-config" onclick="regresarAlInicio()">« Cambiar Jugadores</button>
+        </div>
+
+        <div class="players-grid" id="contenedor-jugadores"></div>
+        <div id="resultados" class="hidden"></div>
+    </div>
+</div>
+
+<script>
+    const TECLAS_ASIGNADAS = ['A', 'G', 'L', 'P', 'Space'];
+    const NOMBRES_TECLAS = ['Tecla A', 'Tecla G', 'Tecla L', 'Tecla P', 'Espacio'];
+
+    let numJugadores = 2;
+    let tiempoObjetivo = 0;
+    let tiempoActual = 0;
+    let intervalo = null;
+    let juegoActivo = false;
+    let tiempoOcultar = 0;
+    
+    let datosJugadores = [];
+
+    function iniciarConfiguracion() {
+        numJugadores = parseInt(document.getElementById('cant-jugadores').value);
+        document.getElementById('pantalla-inicio').classList.add('hidden');
+        document.getElementById('pantalla-juego').classList.remove('hidden');
+        
+        prepararRonda();
+    }
+
+    function regresarAlInicio() {
+        // Asegurar que el cronómetro se limpie si estaba corriendo
+        clearInterval(intervalo);
+        juegoActivo = false;
+        
+        // Intercambiar pantallas
+        document.getElementById('pantalla-juego').classList.add('hidden');
+        document.getElementById('pantalla-inicio').classList.remove('hidden');
+    }
+
+    function prepararRonda() {
+        juegoActivo = false;
+        tiempoActual = 0;
+        document.getElementById('cronometro').innerText = "00.00";
+        document.getElementById('cronometro').style.color = "#39ff14";
+        document.getElementById('resultados').classList.add('hidden');
+        
+        // Mostrar botones de control de inicio, ocultar el de volver si ya empezó
+        document.getElementById('zona-controles-inicio').classList.remove('hidden');
+        document.getElementById('btn-comenzar').style.display = 'inline-block';
+        document.getElementById('btn-volver-config').style.display = 'inline-block';
+
+        // 1. Definir objetivo aleatorio entre 5 y 12 segundos
+        tiempoObjetivo = Math.floor(Math.random() * (12 - 5 + 1)) + 5;
+        document.getElementById('instruccion-objetivo').innerText = `Objetivo: Detenerse exactamente a los ${tiempoObjetivo}.00 segundos`;
+
+        // 2. Definir en qué momento aleatorio se borra la pantalla (entre 1.5 y 3.5 segundos)
+        tiempoOcultar = 1.5 + (Math.random() * 2);
+
+        // 3. Reiniciar el estado de los jugadores
+        datosJugadores = [];
+        const contenedor = document.getElementById('contenedor-jugadores');
+        contenedor.innerHTML = '';
+
+        for (let i = 0; i < numJugadores; i++) {
+            datosJugadores.push({
+                id: i + 1,
+                tecla: TECLAS_ASIGNADAS[i] === 'Space' ? ' ' : TECLAS_ASIGNADAS[i].toLowerCase(),
+                nombreTecla: NOMBRES_TECLAS[i],
+                tiempoRegistrado: null,
+                listo: false
+            });
+
+            contenedor.innerHTML += `
+                <div class="player-card" id="tarjeta-p${i+1}">
+                    <h3>Jugador ${i+1}</h3>
+                    <p><span class="player-key">${NOMBRES_TECLAS[i]}</span></p>
+                    <p id="tiempo-p${i+1}" style="color: #70b370;">Esperando...</p>
+                </div>
+            `;
+        }
+    }
+
+    function comenzarCarrera() {
+        document.getElementById('btn-comenzar').style.display = 'none';
+        document.getElementById('btn-volver-config').style.display = 'none'; // Ocultar para evitar romper la ronda
+        
+        juegoActivo = true;
+        const tiempoInicio = performance.now();
+
+        intervalo = setInterval(() => {
+            const tiempoPasado = (performance.now() - tiempoInicio) / 1000;
+            tiempoActual = tiempoPasado;
+
+            if (tiempoActual >= tiempoOcultar) {
+                document.getElementById('cronometro').innerText = "??.??";
+                document.getElementById('cronometro').style.color = "#70b370";
+            } else {
+                document.getElementById('cronometro').innerText = tiempoActual.toFixed(2);
+            }
+
+            if (tiempoActual > tiempoObjetivo + 4) {
+                finalizarJuego();
+            }
+        }, 10);
+    }
+
+    window.addEventListener('keydown', (event) => {
+        if (!juegoActivo) return;
+
+        if (event.key === ' ') event.preventDefault();
+
+        const jugador = datosJugadores.find(p => p.tecla === event.key.toLowerCase() && !p.listo);
+
+        if (jugador) {
+            jugador.tiempoRegistrado = tiempoActual;
+            jugador.listo = true;
+            
+            document.getElementById(`tarjeta-p${jugador.id}`).classList.add('ready');
+            document.getElementById(`tiempo-p${jugador.id}`).innerText = "¡Fijado!";
+            document.getElementById(`tiempo-p${jugador.id}`).style.color = "#39ff14";
+
+            const todosListos = datosJugadores.every(p => p.listo);
+            if (todosListos) {
+                finalizarJuego();
+            }
+        }
+    });
+
+    function finalizarJuego() {
+        clearInterval(intervalo);
+        juegoActivo = false;
+
+        document.getElementById('cronometro').innerText = tiempoActual.toFixed(2);
+        document.getElementById('cronometro').style.color = "#39ff14";
+        document.getElementById('zona-controles-inicio').classList.add('hidden');
+
+        let mejorDiferencia = Infinity;
+        let ganador = null;
+        let listaHtml = "<h3>📊 Resultados de la Ronda:</h3><ul>";
+
+        datosJugadores.forEach(p => {
+            const tiempoFc = p.tiempoRegistrado ? p.tiempoRegistrado.toFixed(2) : "No presionó";
+            let diferenciaTexto = "";
+            
+            if (p.tiempoRegistrado) {
+                const diff = Math.abs(p.tiempoRegistrado - tiempoObjetivo);
+                diferenciaTexto = `(Diferencia: ${diff.toFixed(2)}s)`;
+                
+                if (diff < mejorDiferencia) {
+                    mejorDiferencia = diff;
+                    ganador = p;
+                }
+            } else {
+                diferenciaTexto = "- Descalificado";
+            }
+
+            listaHtml += `<li><strong>Jugador ${p.id}:</strong> ${tiempoFc} segundos ${diferenciaTexto}</li>`;
+        });
+
+        listaHtml += "</ul>";
+
+        if (ganador) {
+            listaHtml += `<p class="ganador">🏆 ¡El Jugador ${ganador.id} gana por estar más cerca!</p>`;
+        } else {
+            listaHtml += `<p class="ganador">❌ Nadie presionó a tiempo.</p>`;
+        }
+
+        listaHtml += `
+            <div class="button-group">
+                <button class="btn" onclick="prepararRonda()">Jugar Otra Vez</button>
+                <button class="btn btn-secondary" onclick="regresarAlInicio()">« Volver al Menú Principal</button>
+            </div>
+        `;
+
+        const panelResultados = document.getElementById('resultados');
+        panelResultados.innerHTML = listaHtml;
+        panelResultados.classList.remove('hidden');
+
+        datosJugadores.forEach(p => {
+            document.getElementById(`tiempo-p${p.id}`).innerText = p.tiempoRegistrado ? `${p.tiempoRegistrado.toFixed(2)}s` : "N/A";
+        });
+    }
+</script>
+
+</body>
+</html>
