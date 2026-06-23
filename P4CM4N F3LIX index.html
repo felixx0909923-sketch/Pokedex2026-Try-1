@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Retro: P4CM4N F3LIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: 'Press Start 2P', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffde00;
+            text-shadow: 2px 2px #ff0000;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        #game-container {
+            position: relative;
+            border: 4px solid #2020cb;
+            box-shadow: 0 0 20px #2020cb;
+            background-color: #000;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        canvas {
+            background-color: #000;
+            display: block;
+        }
+        #ui {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .neon-text {
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff;
+        }
+    <style>
+    body {
+        background-color: #111;
+        color: #fff;
+        font-family: 'Press Start 2P', monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    h1 {
+        color: #ffde00;
+        text-shadow: 2px 2px #ff0000;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    #game-container {
+        position: relative;
+        border: 4px solid #2020cb;
+        box-shadow: 0 0 20px #2020cb;
+        background-color: #000;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    canvas {
+        background-color: #000;
+        display: block;
+    }
+
+    #ui {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .neon-text {
+        color: #fff;
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff;
+    }
+
+    #resetBtn {
+        margin-top: 10px;
+        padding: 10px 15px;
+        font-family: 'Press Start 2P', monospace;
+        background-color: #2020cb;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+
+    #resetBtn:hover {
+        background-color: #4040ff;
+    }
+</style>
+}
+
+#resetBtn:hover {
+    background-color: #4040ff;
+}>
+</head>
+<body>
+
+    <h1>P4CM4N F3LIX</h1>
+    
+    <div id="game-container">
+        <div id="ui">
+            <span>SCORE: <span id="score" class="neon-text">0</span></span>
+            <span id="game-over" style="color: red; display: none;">GAME OVER</span>
+        </div>
+        <canvas id="gameCanvas" width="380" height="420"></canvas>
+        <button id="resetBtn">REINICIAR</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const gameOverElement = document.getElementById('game-over');
+        const resetBtn = document.getElementById('resetBtn');
+
+        const tileSize = 20;
+        let score = 0;
+        let gameOver = false;
+
+        // 1: Pared, 0: Punto, 2: Vacío
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,2,1,2,1,1,1,0,1,1,1,1],
+            [2,2,2,1,0,1,2,2,2,2,2,2,2,1,0,1,2,2,2],
+            [1,1,1,1,0,1,2,1,1,2,1,1,2,1,0,1,1,1,1],
+            [2,2,2,2,0,2,2,1,2,2,2,1,2,2,0,2,2,2,2],
+            [1,1,1,1,0,1,2,1,1,1,1,1,2,1,0,1,1,1,1],
+            [2,2,2,1,0,1,2,2,2,2,2,2,2,1,0,1,2,2,2],
+            [1,1,1,1,0,1,2,1,1,1,1,1,2,1,0,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1],
+            [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1],
+            [1,1,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        const ghostColors = [
+    "red",
+    "cyan",
+    "pink",
+    "orange",
+    "lime",
+    "purple",
+    "yellow",
+    "white"
+];
+
+let ghosts = [
+    {
+        x: 9,
+        y: 9,
+        dx: 1,
+        dy: 0,
+        color: "red"
+    }
+];
+
+const player = {
+    x: 9,
+    y: 15,
+    dx: 0,
+    dy: 0,
+    nextDx: 0,
+    nextDy: 0
+};
+
+        function drawMap() {
+            for (let r = 0; r < map.length; r++) {
+                for (let c = 0; c < map[r].length; c++) {
+                    if (map[r][c] === 1) {
+                        ctx.fillStyle = '#2020cb';
+                        ctx.fillRect(c * tileSize, r * tileSize, tileSize, tileSize);
+                    } else if (map[r][c] === 0) {
+                        ctx.fillStyle = '#fff';
+                        ctx.beginPath();
+                        ctx.arc(c * tileSize + tileSize / 2, r * tileSize + tileSize / 2, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = '#ffde00';
+            ctx.beginPath();
+            ctx.arc(player.x * tileSize + tileSize / 2, player.y * tileSize + tileSize / 2, tileSize / 2 - 2, 0.2 * Math.PI, 1.8 * Math.PI);
+            ctx.lineTo(player.x * tileSize + tileSize / 2, player.y * tileSize + tileSize / 2);
+            ctx.fill();
+        }
+
+        function drawGhost(g) {
+            ctx.fillStyle = g.color;
+            ctx.beginPath();
+            ctx.arc(g.x * tileSize + tileSize / 2, g.y * tileSize + tileSize / 2, tileSize / 2 - 2, Math.PI, 0);
+            ctx.lineTo(g.x * tileSize + tileSize - 2, g.y * tileSize + tileSize - 2);
+            ctx.lineTo(g.x * tileSize + 2, g.y * tileSize + tileSize - 2);
+            ctx.fill();
+        }
+function addGhost() {
+    const color = ghostColors[ghosts.length % ghostColors.length];
+
+    ghosts.push({
+        x: 9,
+        y: 9,
+        dx: Math.random() < 0.5 ? 1 : -1,
+        dy: 0,
+        color: color
+    });
+}
+        function update() {
+            if (gameOver) return;
+
+            // Intentar cambiar dirección del jugador
+            if (map[player.y + player.nextDy][player.x + player.nextDx] !== 1) {
+                player.dx = player.nextDx;
+                player.dy = player.nextDy;
+            }
+
+            // Mover jugador
+            if (map[player.y + player.dy][player.x + player.dx] !== 1) {
+                player.x += player.dx;
+                player.y += player.dy;
+            }
+
+            // Comer puntos
+           if (map[player.y][player.x] === 0) {
+    map[player.y][player.x] = 2;
+    score += 10;
+    scoreElement.innerText = score;
+
+    if (score > 0 && score % 100 === 0) {
+        addGhost();
+    }
+}
+
+            // IA básica del fantasma (movimiento simple con rebote)
+           ghosts.forEach(ghost => {
+
+    if (map[ghost.y + ghost.dy][ghost.x + ghost.dx] === 1) {
+
+        const dirs = [
+            {dx: 1, dy: 0},
+            {dx: -1, dy: 0},
+            {dx: 0, dy: 1},
+            {dx: 0, dy: -1}
+        ];
+
+        let validDirs = dirs.filter(
+            d => map[ghost.y + d.dy][ghost.x + d.dx] !== 1
+        );
+
+        if (validDirs.length > 0) {
+            let move =
+                validDirs[Math.floor(Math.random() * validDirs.length)];
+
+            ghost.dx = move.dx;
+            ghost.dy = move.dy;
+        }
+
+    } else {
+
+        if (Math.random() < 0.2) {
+
+            const dirs = [
+                {dx: 1, dy: 0},
+                {dx: -1, dy: 0},
+                {dx: 0, dy: 1},
+                {dx: 0, dy: -1}
+            ];
+
+            let validDirs = dirs.filter(
+                d => map[ghost.y + d.dy][ghost.x + d.dx] !== 1
+            );
+
+            if (validDirs.length > 0) {
+                let move =
+                    validDirs[Math.floor(Math.random() * validDirs.length)];
+
+                ghost.dx = move.dx;
+                ghost.dy = move.dy;
+            }
+        }
+    }
+
+    ghost.x += ghost.dx;
+    ghost.y += ghost.dy;
+});
+            // Colisión con fantasma
+          // Colisión con fantasma
+ghosts.forEach(ghost => {
+    if (player.x === ghost.x && player.y === ghost.y) {
+        gameOver = true;
+        gameOverElement.style.display = 'block';
+    }
+});
+
+}
+        function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    update();
+    drawMap();
+    drawPlayer();
+    ghosts.forEach(ghost => drawGhost(ghost));
+}
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') { player.nextDx = 0; player.nextDy = -1; }
+            if (e.key === 'ArrowDown') { player.nextDx = 0; player.nextDy = 1; }
+            if (e.key === 'ArrowLeft') { player.nextDx = -1; player.nextDy = 0; }
+            if (e.key === 'ArrowRight') { player.nextDx = 1; player.nextDy = 0; }
+        });
+
+        // La velocidad del juego está controlada por el setInterval (150ms da un toque retro "frame a frame")
+        resetBtn.addEventListener('click', () => {
+    location.reload();
+});setInterval(gameLoop, 150);
+
+    </script>
+</body>
+</html>
